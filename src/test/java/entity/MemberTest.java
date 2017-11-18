@@ -5,6 +5,10 @@ import org.junit.*;
 import javax.persistence.*;
 import java.util.Objects;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -152,35 +156,85 @@ public class MemberTest {
         EntityManager em2 = emf.createEntityManager();
         EntityTransaction tx2 = em2.getTransaction();
 
+        Member member = new Member();
+
         try {
             tx1.begin();
-            Member member = new Member();
             member.setUsername(ANY_USER_NAME);
             member.setId(ANY_ID);
             member.setAge(ANY_AGE);
 
             em1.persist(member);
             tx1.commit();
+        } catch (Exception e) {
+            tx1.rollback();
+        } finally {
             em1.close();
+        }
 
+        member.setUsername("otherUserName");
+
+        try {
             tx2.begin();
+            Member found = em2.find(Member.class, member.getId());
+            assertThat("엔티티가 준영속 상태가 된 후 username을 변경하였으나 영속성 컨텍스트가 관리하지 않기 때문에 update가 되지 않았을 것이다", member.getUsername(), not(equalTo(found.getUsername())));
 
             Member merged = em2.merge(member);
 
+            assertThat("엔티티가 준영속 상태의 엔티티를 merge를 통해 영속성 콘텍스트가 관리하는 1차 캐시의 엔티티로 병합이 되면서 변경된 내용이 update가 된다",
+                member.getUsername(), equalTo(found.getUsername()));
             assertTrue("병합후 반환된 엔티티는 인자로 넘긴 준영속 엔티티와 다른 인스턴스다", member != merged);
-
-            Member found = em2.find(Member.class, member.getId());
-
             assertTrue("병합후 반환된 엔티티와 병합후 find로 찾은 엔티티는 같은 1차 캐시에서 반환되어 같은 인스턴스일 것이다", found == merged);
 
-            tx2.commit();
-            em2.close();
+            member.setUsername("anotherUserName");
 
+            assertThat("member 엔티티는 merge의 인자로 넘겨졌다고 해서 준영속에서 영속상태가 되는 것은 아니다. 단지 영속성 컨텍스트에서 관리하는 id가 같은 엔티티에 값을 뒤집어 씌울뿐", member.getUsername(), not(equalTo(merged.getUsername())));
+
+            tx2.commit();
         } catch (Exception e) {
-           tx1.rollback();
-           tx2.rollback();
-           em1.close();
-           em2.close();
+            tx2.rollback();
+        } finally {
+            em2.close();
+        }
+    }
+
+    @Test
+    public void changeEntityIdAndMerge() throws Exception {
+        EntityManager em1 = emf.createEntityManager();
+        EntityTransaction tx1 = em1.getTransaction();
+        EntityManager em2 = emf.createEntityManager();
+        EntityTransaction tx2 = em2.getTransaction();
+
+        Member member = new Member();
+
+        try {
+            tx1.begin();
+            member.setId(ANY_ID);
+            member.setUsername(ANY_USER_NAME);
+            member.setAge(ANY_AGE);
+            em1.persist(member);
+            tx1.commit();
+        } catch (Exception e) {
+            tx1.rollback();
+        } finally {
+            em1.close();
+        }
+
+        member.setId("other@email.com");
+
+        try {
+            tx2.begin();
+            assertThat("준영속 상태의 엔티티의 id를 바꾸었다고 해서 DB에 업데이트 되지 않았다", em2.find(Member.class, member.getId()), nullValue());
+
+            Member merged = em2.merge(member);
+
+            assertThat("member가 병합되면서 set한 이아디의 엔티티가 존재한다", merged == em2.find(Member.class, member.getId()));
+            assertThat("기존에 영속화 했던 member는 존재한다", em2.find(Member.class, ANY_ID).getId(), equalTo(ANY_ID));
+            tx2.commit();
+        } catch (Exception e) {
+            tx2.rollback();
+        } finally {
+            em2.close();
         }
     }
 
