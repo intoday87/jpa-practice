@@ -35,6 +35,7 @@ public class MemberTest {
             transaction.begin();
             Member member = new Member();
             member.setId(ANY_ID_IN_DB);
+            member.setUsername(ANY_USER_NAME);
             entityManager.persist(member);
             transaction.commit();
         }
@@ -78,7 +79,7 @@ public class MemberTest {
             Member found = entityManager.find(Member.class, ANY_ID_IN_DB);
 
             assertTrue(member != found);
-            assertTrue(Objects.isNull(found.getUsername()));
+            assertThat(member.getUsername(), not(equalTo(found.getUsername())));
 
             transaction.commit();
         } catch (Throwable e) {
@@ -102,7 +103,7 @@ public class MemberTest {
             Member found = entityManager.createQuery("SELECT m FROM Member m WHERE m.id LIKE '" + ANY_ID_IN_DB + "'", Member.class).getResultList().get(0);
 
             assertTrue(member != found);
-            assertTrue(Objects.isNull(found.getUsername()));
+            assertThat(member.getUsername(), not(equalTo(found.getUsername())));
 
             transaction.commit();
         } catch (Exception e) {
@@ -117,6 +118,7 @@ public class MemberTest {
             transaction.begin();
             Member member = new Member();
             member.setId(ANY_ID);
+            member.setUsername(ANY_USER_NAME);
             entityManager.persist(member);
             entityManager.detach(member);
             transaction.commit();
@@ -142,7 +144,7 @@ public class MemberTest {
             entityManager = emf.createEntityManager();
             transaction.begin();
             Member found = entityManager.find(Member.class, ANY_ID_IN_DB);
-            assertTrue(Objects.isNull(found.getUsername()));
+            assertThat(member.getUsername(), equalTo(found.getUsername()));
             transaction.commit();
         } catch (Exception e) {
             transaction.rollback();
