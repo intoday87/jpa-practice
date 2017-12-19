@@ -1,7 +1,5 @@
 package entity;
 
-import lombok.Setter;
-
 import javax.persistence.*;
 
 @Entity

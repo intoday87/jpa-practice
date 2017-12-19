@@ -3,6 +3,8 @@
     <persistence-unit name="jpa-practice">
         <class>entity.Member</class>
         <class>entity.Sequence</class>
+        <class>entity.Board</class>
+        <class>entity.MySequences</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver" />
             <property name="javax.persistence.jdbc.user" value="sa" />
