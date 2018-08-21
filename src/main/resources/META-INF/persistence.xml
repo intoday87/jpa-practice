@@ -5,6 +5,8 @@
         <class>entity.Sequence</class>
         <class>entity.Board</class>
         <class>entity.MySequences</class>
+        <class>entity.Order</class>
+        <class>entity.OrderProduct</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver" />
             <property name="javax.persistence.jdbc.user" value="sa" />
@@ -15,7 +17,7 @@
             <property name="hibernate.format_sql" value="true" />
             <property name="hibernate.use_sql_comments" value="true" />
             <property name="hibernate.new_generator_mappings" value="true" />
-            <!--<property name="hibernate.hbm2ddl.auto" value="create" />-->
+            <property name="hibernate.hbm2ddl.auto" value="create" />
             <property name="javax.persistence.schema-generation.database.action" value="drop-and-create" />
             <!--hibernate 5에서는 더 이상 지원하지 않는다. 대체할 수 있는 방법 https://stackoverflow.com/questions/32437202/improvednamingstrategy-no-longer-working-in-hibernate-5-->
             <!--<property name="hibernate.ejb.naming_strategy" value="org.hibernate.cfg.ImprovedNamingStrategy" />-->
